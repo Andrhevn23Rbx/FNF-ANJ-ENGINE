@@ -6,15 +6,15 @@ import android.content.Context;
 
 import debug.FPSCounter;
 
-import flixel.graphics.FlxGraphic;
+import flixel.FlxG;
 import flixel.FlxGame;
 import flixel.FlxState;
 import haxe.io.Path;
 import openfl.Assets;
 import openfl.Lib;
 import openfl.display.Sprite;
-import openfl.events.Event;
 import openfl.display.StageScaleMode;
+import openfl.events.Event;
 import lime.app.Application;
 import states.TitleState;
 
@@ -67,16 +67,19 @@ class Main extends Sprite
 	{
 		super();
 
+		// Lock OpenFL Stage framerate immediately
+		Lib.current.stage.frameRate = 60;
+
 		#if (cpp && windows)
 		backend.Native.fixScaling();
 		#end
 
-		// Credits to MAJigsaw77 (he's the og author for this code)
 		#if android
 		Sys.setCwd(Path.addTrailingSlash(Context.getExternalFilesDir()));
 		#elseif ios
 		Sys.setCwd(lime.system.System.applicationStorageDirectory);
 		#end
+
 		#if VIDEOS_ALLOWED
 		hxvlc.util.Handle.init(#if (hxvlc >= "1.8.0")  ['--no-lua'] #end);
 		#end
@@ -155,7 +158,7 @@ class Main extends Sprite
 		var flxGame = new FlxGame(game.width, game.height, game.initialState, game.framerate, game.framerate, game.skipSplash, game.startFullscreen);
 		addChild(flxGame);
 		
-		// Lock the FPS explicitly here to avoid NullObjectReference errors
+		// Lock the FPS explicitly on FlxG for extra safety
 		FlxG.updateFramerate = 60;
 		FlxG.drawFramerate = 60;
 
