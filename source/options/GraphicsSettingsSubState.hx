@@ -1,6 +1,6 @@
 package options;
 
-#if desktop
+#if DISCORD_ALLOWED
 import DiscordClient;
 #end
 
@@ -131,6 +131,10 @@ class AllOptimizationMenu extends BaseOptionsMenu
 			FlxG.drawFramerate = ClientPrefs.data.framerate;
 			FlxG.updateFramerate = ClientPrefs.data.framerate;
 		}
+	}
+
+	inline function interpolate(start:Float, end:Float, t:Float, power:Float = 1):Float {
+		return start + Math.pow(t, power) * (end - start);
 	}
 
 	override function changeSelection(change:Int = 0) {
