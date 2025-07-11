@@ -79,7 +79,7 @@ class FPSCounter extends TextField
             '\nRAM: ${ramUsedMB}MB/${memMaxMB}MB' +
             '\nRAM-P (${peakRamMB}MB)' + // Peak RAM usage
             '\nMEM-P (${peakMemMB}MB)' + // Peak MEM usage
-            '\nANJE (VER 0.1.0)';
+            '\nANJE (VER 0.1.1)';
 
         textColor = 0xFFFFFFFF;
         if (currentFPS < FlxG.drawFramerate * 0.5)
