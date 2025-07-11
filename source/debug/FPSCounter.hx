@@ -49,20 +49,38 @@ class FPSCounter extends TextField
 		final now:Float = haxe.Timer.stamp() * 1000;
 		times.push(now);
 		while (times[0] < now - 1000) times.shift();
-		// prevents the overlay from updating every frame, why would you need to anyways @crowplexus
+		
+		// Update every ~50ms to prevent overload
 		if (deltaTimeout < 50) {
 			deltaTimeout += deltaTime;
 			return;
 		}
 
-		currentFPS = times.length < FlxG.updateFramerate ? times.length : FlxG.updateFramerate;		
+		currentFPS = times.length < FlxG.updateFramerate ? times.length : FlxG.updateFramerate;
 		updateText();
 		deltaTimeout = 0.0;
 	}
 
-	public dynamic function updateText():Void { // so people can override it in hscript
-		text = 'FPS: ${currentFPS}'
-		+ '\nMemory: ${flixel.util.FlxStringUtil.formatBytes(memoryMegas)}';
+	public dynamic function updateText():Void { // customizable
+		var usedMem:Float = cpp.vm.Gc.memInfo64(cpp.vm.Gc.MEM_INFO_USAGE); // bytes
+		var maxMem:Float = cpp.vm.Gc.memInfo64(cpp.vm.Gc.MEM_INFO_RESERVE); // reserved GC mem
+
+		var totalRAM:Float = System.totalMemory;       // total RAM
+		var privateRAM:Float = System.privateMemory;   // private RAM
+
+		// Convert all to MB
+		var memUsedMB = Std.int(usedMem / 1024 / 1024);
+		var memMaxMB = Std.int(maxMem / 1024 / 1024);
+		var ramUsedMB = Std.int(totalRAM / 1024 / 1024);
+		var ramPrivMB = Std.int(privateRAM / 1024 / 1024);
+
+		text =
+			'FPS: ${currentFPS}' +
+			'\nMEM: ${memUsedMB}MB/${memMaxMB}MB' +
+			'\nRAM: ${ramUsedMB}MB/${memMaxMB}MB' +
+			'\nRAM-P (${ramPrivMB}MB)' +
+			'\nMEM-P (${memUsedMB}MB)' +
+			'\nANJE (VER 0.1.0)';
 
 		textColor = 0xFFFFFFFF;
 		if (currentFPS < FlxG.drawFramerate * 0.5)
