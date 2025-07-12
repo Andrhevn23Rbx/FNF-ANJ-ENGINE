@@ -2,7 +2,6 @@ package debug;
 
 import openfl.text.TextField;
 import openfl.text.TextFormat;
-import openfl.system.System;
 import cpp.vm.Gc;
 import haxe.Timer;
 import haxe.Http;
@@ -11,7 +10,6 @@ class FPSCounter extends TextField
 {
     public var currentFPS:Int = 60;
 
-    private var peakMem:Float = 0;
     private var lastPing:Float = 0;
     private var deltaTimeout:Float = 0;
     private var frameTimes:Array<Float> = [];
@@ -37,7 +35,8 @@ class FPSCounter extends TextField
     {
         // FPS tracking
         var now = Timer.stamp();
-        if (lastTime > 0) {
+        if (lastTime > 0)
+        {
             var dt = now - lastTime;
             frameTimes.push(dt);
             if (frameTimes.length > 60) frameTimes.shift();
@@ -50,7 +49,7 @@ class FPSCounter extends TextField
         }
         lastTime = now;
 
-        // Update info every 0.5s
+        // Update text every 0.5 seconds
         deltaTimeout += elapsed;
         if (deltaTimeout >= 0.5)
         {
@@ -62,13 +61,11 @@ class FPSCounter extends TextField
 
     function updateText():Void
     {
-        // Real memory usage (in MB)
+        // Memory used by the game itself
         var usedMem:Float = Gc.memInfo64(Gc.MEM_INFO_USAGE) / 1024 / 1024;
         var reservedMem:Float = Gc.memInfo64(Gc.MEM_INFO_RESERVED) / 1024 / 1024;
 
-        if (usedMem > peakMem) peakMem = usedMem;
-
-        // Format ping nicely
+        // Format ping correctly
         var formattedPing:String = (lastPing >= 0)
             ? StringTools.lpad(Std.string(Math.fround(lastPing * 1000)), "0", 8)
             : "000000.00";
@@ -87,7 +84,7 @@ class FPSCounter extends TextField
         var http = new Http(url);
 
         http.onError = function(e) lastPing = -1;
-        http.onStatus = function(_) lastPing = Timer.stamp() - start;
+        http.onData = function(_) lastPing = Timer.stamp() - start;
 
         http.request(false);
     }
