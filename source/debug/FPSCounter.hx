@@ -4,21 +4,20 @@ import flixel.FlxG;
 import openfl.text.TextField;
 import openfl.text.TextFormat;
 import openfl.system.System;
-import openfl.display.DisplayObject;
 
 class FPSCounter extends TextField
 {
     public var currentFPS(default, null):Int;
     public var memoryMegas(get, never):Float;
 
-    @:noCompletion private var times:Array<Float>;
-
     private var fixedX:Float;
     private var fixedY:Float;
 
-    // Track peak usage
     private var peakMemMB:Int = 0;
     private var peakRamMB:Int = 0;
+
+    private var frameTimes:Array<Float>;
+    private var lastTime:Float;
 
     public function new(x:Float = 10, y:Float = 10, color:Int = 0xFFFFFF)
     {
@@ -35,31 +34,49 @@ class FPSCounter extends TextField
         multiline = true;
         text = "FPS: ";
 
-        times = [];
+        frameTimes = [];
+        lastTime = 0;
     }
-
-    var deltaTimeout:Float = 0.0;
 
     private override function __enterFrame(deltaTime:Float):Void
     {
-        // Lock position safely only if added to stage
-        if (this.stage != null) {
-            this.x = fixedX;
-            this.y = fixedY;
+        if (stage != null)
+        {
+            x = fixedX;
+            y = fixedY;
         }
 
-        // Lock FPS at 60 regardless of actual frame timing
-        currentFPS = 60;
+        // Track FPS over last second (or ~60 frames)
+        var now = Date.now().getTime() / 1000.0;
+        if (lastTime > 0)
+        {
+            var frameTime = now - lastTime;
+            frameTimes.push(frameTime);
 
-        // Throttle updates to about every 50ms
+            // Keep frameTimes for about last 1 second
+            var total = 0.0;
+            for (ft in frameTimes) total += ft;
+            while (total > 1.0 && frameTimes.length > 0)
+            {
+                total -= frameTimes.shift();
+            }
+
+            if (total > 0)
+                currentFPS = Math.round(frameTimes.length / total);
+        }
+        lastTime = now;
+
+        // Update display every ~0.5 seconds to save performance
         deltaTimeout += deltaTime;
-        if (deltaTimeout < 50) return;
-        deltaTimeout = 0.0;
+        if (deltaTimeout < 0.5) return;
+        deltaTimeout = 0;
 
         updateText();
     }
 
-    public dynamic function updateText():Void
+    private var deltaTimeout:Float = 0;
+
+    public function updateText():Void
     {
         var usedMem:Float = cpp.vm.Gc.memInfo64(cpp.vm.Gc.MEM_INFO_USAGE);
         var maxMem:Float = cpp.vm.Gc.memInfo64(cpp.vm.Gc.MEM_INFO_RESERVED);
@@ -69,16 +86,15 @@ class FPSCounter extends TextField
         var memMaxMB = Std.int(maxMem / 1024 / 1024);
         var ramUsedMB = Std.int(totalRAM / 1024 / 1024);
 
-        // Update peak memory and RAM
         if (memUsedMB > peakMemMB) peakMemMB = memUsedMB;
         if (ramUsedMB > peakRamMB) peakRamMB = ramUsedMB;
 
         text =
-            'FPS: ${currentFPS}' +
+            'FPS: $currentFPS' +
             '\nMEM: ${memUsedMB}MB/${memMaxMB}MB' +
             '\nRAM: ${ramUsedMB}MB/${memMaxMB}MB' +
-            '\nRAM-P (${peakRamMB}MB)' + // Peak RAM usage
-            '\nMEM-P (${peakMemMB}MB)' + // Peak MEM usage
+            '\nRAM-P ($peakRamMB MB)' +
+            '\nMEM-P ($peakMemMB MB)' +
             '\nANJE (VER 0.1.3)';
 
         textColor = 0xFFFFFFFF;
