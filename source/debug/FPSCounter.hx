@@ -5,18 +5,24 @@ import openfl.text.TextFormat;
 
 class FPSCounter extends TextField
 {
-    public function new(x:Float = 10, y:Float = 10, color:Int = 0xFFFFFF)
+    private var fixedX:Float;
+    private var fixedY:Float;
+
+    public function new(posX:Float = 10, posY:Float = 10, color:Int = 0xFFFFFF)
     {
         super();
 
-        x = x;
-        y = y;
+        fixedX = posX;
+        fixedY = posY;
 
         selectable = false;
         mouseEnabled = false;
         defaultTextFormat = new TextFormat("_sans", 14, color);
         autoSize = LEFT;
         multiline = true;
+
+        this.x = fixedX;
+        this.y = fixedY;
 
         updateText();
     }
